@@ -266,7 +266,10 @@ function ContentDetail() {
               {/* 복사 버튼 */}
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-3">텍스트 복사</h3>
-                <EnhancedCopyButton originalText={content.content || ''} />
+                <EnhancedCopyButton 
+                  originalText={(content.content || '').split('## 참고 자료')[0].trim()}
+                  onCopy={() => alert('본문 내용이 복사되었습니다.')}
+                />
               </div>
             </div>
           )}
