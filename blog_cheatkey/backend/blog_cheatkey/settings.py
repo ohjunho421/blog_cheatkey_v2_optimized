@@ -61,6 +61,7 @@ CACHES = {
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 PERPLEXITY_API_KEY = os.environ.get('PERPLEXITY_API_KEY','')
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
 
 # Application definition
 INSTALLED_APPS = [

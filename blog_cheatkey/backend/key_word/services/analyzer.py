@@ -3,7 +3,7 @@ import logging
 import json
 import re
 from django.conf import settings
-from openai import OpenAI
+import google.generativeai as genai
 
 # from research.services.collector import ResearchCollector 제거 (순환 참조 방지)
 
@@ -11,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 class KeywordAnalyzer:
     """
-    OpenAI의 GPT API를 사용한 키워드 분석 서비스
-    기존 코드의 Perplexity API 대신 OpenAI API 사용
+    Google의 Gemini API를 사용한 키워드 분석 서비스
     """
     
     def __init__(self):
@@ -20,16 +19,9 @@ class KeywordAnalyzer:
         os.environ.pop('http_proxy', None)
         os.environ.pop('https_proxy', None)
         
-        from dotenv import load_dotenv
-        import pathlib
-        
-        backend_dir = pathlib.Path(__file__).parent.parent.parent
-        env_path = os.path.join(backend_dir, '.env')
-        load_dotenv(dotenv_path=env_path)
-        
-        self.api_key = os.environ.get('OPENAI_API_KEY')
-        self.client = OpenAI(api_key=self.api_key)
-        self.model = "gpt-4o"
+        self.google_api_key = settings.GOOGLE_API_KEY
+        genai.configure(api_key=self.google_api_key)
+        self.model = genai.GenerativeModel('gemini-2.5')
     
     def analyze_keyword(self, keyword):
         """
@@ -69,16 +61,13 @@ class KeywordAnalyzer:
             """
             
             # API 호출
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.5,
+            full_prompt = f"{system_prompt}\n\n{prompt}"
+            response = self.model.generate_content(
+                full_prompt,
+                generation_config=genai.types.GenerationConfig(temperature=0.5)
             )
             
-            content = response.choices[0].message.content
+            content = response.text
             return self._parse_analysis_result(content)
             
         except Exception as e:
@@ -118,16 +107,13 @@ class KeywordAnalyzer:
             """
             
             # API 호출
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
+            full_prompt = f"{system_prompt}\n\n{prompt}"
+            response = self.model.generate_content(
+                full_prompt,
+                generation_config=genai.types.GenerationConfig(temperature=0.7)
             )
             
-            content = response.choices[0].message.content
+            content = response.text
             return self._parse_subtopics(content)
             
         except Exception as e:

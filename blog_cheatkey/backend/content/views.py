@@ -104,7 +104,7 @@ class BlogContentViewSet(viewsets.ModelViewSet):
             cache.set(cache_key, {"status": "running", "progress": 50, "message": "AI가 콘텐츠 작성 중..."}, timeout=3600)
 
             # 여기서 명시적으로 subtopics를 전달
-            content_id = generator.generate_content(
+            content_id, source_data = generator.generate_content(
                 keyword_id=keyword_id,
                 user_id=user_id,
                 target_audience=target_audience,
@@ -132,6 +132,11 @@ class BlogContentViewSet(viewsets.ModelViewSet):
                     },
                     timeout=3600
                 )
+
+                # 생성된 실제 콘텐츠에 참고 자료 저장
+                final_content = BlogContent.objects.get(id=content_id)
+                final_content.references = source_data
+                final_content.save(update_fields=['references'])
 
                 # 로깅 추가
                 logger.info(f"백그라운드 콘텐츠 생성 완료: content_id={content_id}")

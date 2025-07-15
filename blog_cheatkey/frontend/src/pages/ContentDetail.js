@@ -186,8 +186,29 @@ function ContentDetail() {
           </span>
         </div>
         
-        {/* 참고자료 바로가기 섹션 (항상 표시) */}
-        <ReferencesSection />
+        {/* 참고자료 섹션 */}
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+          <div className="px-4 py-5 sm:px-6">
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              참고자료
+            </h3>
+            <div className="mt-2 text-sm text-gray-500">
+              {references.length > 0 ? (
+                <ul className="list-disc pl-5 space-y-1">
+                  {references.map((ref, index) => (
+                    <li key={index}>
+                      <a href={ref.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {ref.title || ref.url}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>추출된 참고자료가 없습니다.</p>
+              )}
+            </div>
+          </div>
+        </div>
         
         {/* 탭 네비게이션 */}
         <div className="border-b border-gray-200 mb-6 mt-6">
