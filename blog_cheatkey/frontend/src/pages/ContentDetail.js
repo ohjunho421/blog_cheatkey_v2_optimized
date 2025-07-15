@@ -51,81 +51,29 @@ function ContentDetail() {
     loadContent();
   }, [id]);
 
-  // 콘텐츠에서 참고자료를 추출하는 함수
-  const extractReferencesFromContent = (contentText) => {
-    const refs = [];
-    
-    // 참고자료 섹션 찾기
-    const refSection = contentText.match(/## 참고자료[\s\S]*/);
-    if (!refSection) return refs;
-    
-    // 링크 추출 (마크다운 형식 [제목](URL))
-    const linkRegex = /\[(.*?)\]\((https?:\/\/[^\s)]+)\)/g;
-    let match;
-    
-    while ((match = linkRegex.exec(refSection[0])) !== null) {
-      refs.push({
-        title: match[1],
-        url: match[2]
-      });
-    }
-    
-    return refs;
-  };
 
-  // 콘텐츠에서 참고자료 섹션을 찾아 링크를 활성화하는 함수
-  const processContentWithActiveReferences = (htmlContent) => {
-    if (!htmlContent) return '';
-  
-    // 참고자료 섹션을 찾기 위한 정규식
-    const referenceRegex = /(## 참고자료[\s\S]*)/;
-    const match = htmlContent.match(referenceRegex);
-    
-    if (!match) return htmlContent; // 참고자료 섹션이 없으면 원본 반환
-    
-    const beforeReferences = htmlContent.substring(0, match.index);
-    let referencesSection = match[0];
-    
-    // 1. 마크다운 링크 형식([텍스트](URL))을 HTML 링크로 변환
-    referencesSection = referencesSection.replace(
-      /\[(.*?)\]\((https?:\/\/[^\s)]+)\)/g, 
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>'
-    );
-    
-    // 2. 일반 텍스트 형식의 도메인 이름 (xxx.com)을 링크로 변환
-    referencesSection = referencesSection.replace(
-      /([A-Za-z0-9-]+\.(com|org|net|edu|io|co))\b/g,
-      '<a href="https://$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>'
-    );
-    
-    return beforeReferences + referencesSection;
-  };
 
-  // 참고자료 컴포넌트
+  // 참고자료를 표시하는 컴포넌트
+  const mainContent = (content?.content || '').split('## 참고 자료')[0];
+
   const ReferencesSection = () => {
     if (!references || references.length === 0) {
-      return (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium mb-3">참고자료</h3>
-          <p className="text-gray-500">추출된 참고자료가 없습니다.</p>
-        </div>
-      );
+      return null; // 참고 자료가 없으면 아무것도 표시하지 않음
     }
 
     return (
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-lg font-medium mb-3">사용된 자료 바로가기</h3>
-        <ul className="space-y-2">
+      <div className="mt-8 pt-6 border-t">
+        <h3 className="text-xl font-semibold mb-4">참고 자료</h3>
+        <ul className="list-disc pl-5 space-y-2">
           {references.map((ref, index) => (
-            <li key={index} className="flex justify-between items-center">
-              <span className="text-gray-800 flex-1 mr-4">{index + 1}. {ref.title}</span>
+            <li key={index} className="text-gray-700">
               <a 
-                href={ref.url} 
+                href={ref.url || ref.link} // API 응답에 따라 url 또는 link 사용
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap"
+                className="text-blue-600 hover:underline"
               >
-                방문하기
+                {ref.title}
               </a>
             </li>
           ))}
@@ -261,13 +209,18 @@ function ContentDetail() {
           {/* 콘텐츠 탭 */}
           {activeTab === 'content' && (
             <div className="prose max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: processedContent }} />
+              <div className="mb-4 text-sm text-gray-500">
+                <span>글자수: {content.word_count || 0}</span>
+                <span className="ml-4">형태소: {content.morpheme_count || 0}</span>
+              </div>
+              <div dangerouslySetInnerHTML={{ __html: mainContent.replace(/\n/g, '<br />') }} />
+
+              <ReferencesSection />
               
-              {/* 복사 버튼 */}
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-3">텍스트 복사</h3>
+              <div className="mt-8 pt-6 border-t">
+                <h3 className="text-xl font-semibold mb-4">본문 텍스트 복사</h3>
                 <EnhancedCopyButton 
-                  originalText={(content.content || '').split('## 참고 자료')[0].trim()}
+                  originalText={mainContent.trim()}
                   onCopy={() => alert('본문 내용이 복사되었습니다.')}
                 />
               </div>
